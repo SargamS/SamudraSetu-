@@ -1467,70 +1467,82 @@ export default function App() {
   return (
     <AuthProvider>
       <Router>
-        <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
-          <Navbar />
-          <main>
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/report" element={
-                <ProtectedRoute>
-                  <ReportHazard />
-                </ProtectedRoute>
-              } />
-              <Route path="/safe-locations" element={<SafeLocations />} />
-              <Route path="/media" element={<MediaGallery />} />
-              <Route path="/analytics" element={<Analytics />} />
-              <Route path="/community" element={
-                <ProtectedRoute>
-                  <Community />
-                </ProtectedRoute>
-              } />
-              <Route path="/profile" element={
-                <ProtectedRoute>
-                  <Profile />
-                </ProtectedRoute>
-              } />
-              <Route path="/admin" element={
-                <ProtectedRoute requiredRole="admin">
-                  <AdminPanel />
-                </ProtectedRoute>
-              } />
-              <Route path="*" element={<Navigate to="/" />} />
-            </Routes>
-          </main>
+        <div className="min-h-screen bg-[url('/water.gif')] bg-cover bg-center bg-fixed font-sans text-white">
           
-          <footer className="bg-slate-900 text-slate-400 py-12 border-t border-slate-800">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div>
-                  <div className="flex items-center gap-2 mb-4">
-                    <Shield className="w-6 h-6 text-blue-400" />
-                    <span className="text-lg font-bold text-white tracking-tight">SAMUDRASETU</span>
+          {/* Overlay */}
+          <div className="min-h-screen bg-black/40">
+
+            <Navbar />
+
+            <main>
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/report" element={
+                  <ProtectedRoute>
+                    <ReportHazard />
+                  </ProtectedRoute>
+                } />
+                <Route path="/safe-locations" element={<SafeLocations />} />
+                <Route path="/media" element={<MediaGallery />} />
+                <Route path="/analytics" element={<Analytics />} />
+                <Route path="/community" element={
+                  <ProtectedRoute>
+                    <Community />
+                  </ProtectedRoute>
+                } />
+                <Route path="/profile" element={
+                  <ProtectedRoute>
+                    <Profile />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin" element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AdminPanel />
+                  </ProtectedRoute>
+                } />
+                <Route path="*" element={<Navigate to="/" />} />
+              </Routes>
+            </main>
+
+            <footer className="bg-slate-900/70 backdrop-blur-md text-slate-400 py-12 border-t border-slate-800">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                  
+                  <div>
+                    <div className="flex items-center gap-2 mb-4">
+                      <Shield className="w-6 h-6 text-blue-400" />
+                      <span className="text-lg font-bold text-white tracking-tight">SAMUDRASETU</span>
+                    </div>
+                    <p className="text-sm">
+                      Empowering coastal communities through technology and real-time maritime safety monitoring.
+                    </p>
                   </div>
-                  <p className="text-sm">
-                    Empowering coastal communities through technology and real-time maritime safety monitoring.
-                  </p>
+
+                  <div>
+                    <h4 className="text-white font-bold mb-4">Quick Links</h4>
+                    <ul className="space-y-2 text-sm">
+                      <li><Link to="/dashboard" className="hover:text-white transition-colors">Dashboard</Link></li>
+                      <li><Link to="/report" className="hover:text-white transition-colors">Report Hazard</Link></li>
+                      <li><Link to="/safe-locations" className="hover:text-white transition-colors">Safe Locations</Link></li>
+                    </ul>
+                  </div>
+
+                  <div>
+                    <h4 className="text-white font-bold mb-4">Emergency</h4>
+                    <p className="text-sm mb-2">Maritime Helpline: 1554</p>
+                    <p className="text-sm">Coastal Police: 1093</p>
+                  </div>
+
                 </div>
-                <div>
-                  <h4 className="text-white font-bold mb-4">Quick Links</h4>
-                  <ul className="space-y-2 text-sm">
-                    <li><Link to="/dashboard" className="hover:text-white transition-colors">Dashboard</Link></li>
-                    <li><Link to="/report" className="hover:text-white transition-colors">Report Hazard</Link></li>
-                    <li><Link to="/safe-locations" className="hover:text-white transition-colors">Safe Locations</Link></li>
-                  </ul>
-                </div>
-                <div>
-                  <h4 className="text-white font-bold mb-4">Emergency</h4>
-                  <p className="text-sm mb-2">Maritime Helpline: 1554</p>
-                  <p className="text-sm">Coastal Police: 1093</p>
+
+                <div className="mt-12 pt-8 border-t border-slate-800 text-center text-xs">
+                  &copy; {new Date().getFullYear()} SAMUDRASETU. All rights reserved.
                 </div>
               </div>
-              <div className="mt-12 pt-8 border-t border-slate-800 text-center text-xs">
-                &copy; {new Date().getFullYear()} SAMUDRASETU. All rights reserved.
-              </div>
-            </div>
-          </footer>
+            </footer>
+
+          </div>
         </div>
       </Router>
     </AuthProvider>
