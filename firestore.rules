@@ -1,0 +1,83 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    // Collection: users
+    // Fields: uid, displayName, email, photoURL, role, createdAt
+    //
+    // Collection: hazards
+    // Fields: id, type, description, location (lat, lng, address), status, authorUid, authorName, timestamp, imageUrl
+    //
+    // Collection: safeLocations
+    // Fields: id, name, description, coordinates (lat, lng), type
+    //
+    // Collection: communityPosts
+    // Fields: id, authorUid, authorName, authorPhoto, content, timestamp
+    // ===============================================================
+
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && 
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+         (request.auth.token.email == "sargamshabina06@gmail.com"));
+    }
+
+    function isOfficial() {
+      return isAuthenticated() && 
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'official' || isAdmin());
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    // User Rules
+    match /users/{userId} {
+      // Allow reading individual profiles for everyone, but listing only for admins
+      allow get: if isAuthenticated();
+      allow list: if isAdmin();
+      
+      allow create: if isOwner(userId) && 
+        (request.resource.data.role == 'user' || isAdmin()) && 
+        isValidEmail(request.resource.data.email);
+        
+      allow update: if isOwner(userId) && 
+        (request.resource.data.role == resource.data.role || isAdmin());
+        
+      allow delete: if isAdmin();
+    }
+
+    // Hazard Rules
+    match /hazards/{hazardId} {
+      allow read: if true; // Hazards are public for safety
+      allow create: if isAuthenticated() && 
+        request.resource.data.authorUid == request.auth.uid &&
+        request.resource.data.status == 'reported';
+      allow update: if isOfficial() || (isAuthenticated() && resource.data.authorUid == request.auth.uid && request.resource.data.status == resource.data.status);
+      allow delete: if isAdmin();
+    }
+
+    // Safe Location Rules
+    match /safeLocations/{locationId} {
+      allow read: if true;
+      allow write: if isOfficial();
+    }
+
+    // Community Post Rules
+    match /communityPosts/{postId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.resource.data.authorUid == request.auth.uid;
+      allow update, delete: if isAuthenticated() && (resource.data.authorUid == request.auth.uid || isAdmin());
+    }
+  }
+}

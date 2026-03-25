@@ -1,0 +1,5 @@
+{
+  "name": "Samudrasetu",
+  "description": "A maritime logistics and tracking platform for efficient sea-bridge operations.",
+  "requestFramePermissions": ["geolocation"]
+}

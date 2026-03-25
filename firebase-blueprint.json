@@ -1,0 +1,93 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile information",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Unique identifier for the user" },
+        "displayName": { "type": "string", "description": "User's display name" },
+        "email": { "type": "string", "format": "email", "description": "User's email address" },
+        "photoURL": { "type": "string", "description": "User's profile picture URL" },
+        "role": { "type": "string", "enum": ["user", "official", "admin"], "description": "User's role in the system" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "When the user profile was created" }
+      },
+      "required": ["uid", "email", "role"]
+    },
+    "Hazard": {
+      "title": "Hazard",
+      "description": "A reported maritime hazard",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the hazard" },
+        "type": { "type": "string", "enum": ["storm", "debris", "oil_spill", "other"], "description": "Type of hazard" },
+        "description": { "type": "string", "description": "Detailed description of the hazard" },
+        "location": {
+          "type": "object",
+          "properties": {
+            "latitude": { "type": "number" },
+            "longitude": { "type": "number" },
+            "address": { "type": "string" }
+          }
+        },
+        "status": { "type": "string", "enum": ["reported", "verified", "resolved"], "description": "Current status of the hazard" },
+        "authorUid": { "type": "string", "description": "UID of the user who reported the hazard" },
+        "authorName": { "type": "string", "description": "Name of the user who reported the hazard" },
+        "timestamp": { "type": "string", "format": "date-time", "description": "When the hazard was reported" },
+        "imageUrl": { "type": "string", "description": "Optional image URL of the hazard" }
+      },
+      "required": ["type", "description", "location", "status", "authorUid", "timestamp"]
+    },
+    "SafeLocation": {
+      "title": "SafeLocation",
+      "description": "A pre-defined safe location for coastal communities",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "coordinates": {
+          "type": "object",
+          "properties": {
+            "latitude": { "type": "number" },
+            "longitude": { "type": "number" }
+          }
+        },
+        "type": { "type": "string", "enum": ["shelter", "hospital", "police", "other"] }
+      },
+      "required": ["name", "coordinates", "type"]
+    },
+    "CommunityPost": {
+      "title": "CommunityPost",
+      "description": "A post in the community discussion board",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "authorUid": { "type": "string" },
+        "authorName": { "type": "string" },
+        "authorPhoto": { "type": "string" },
+        "content": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["authorUid", "content", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles"
+    },
+    "/hazards/{hazardId}": {
+      "schema": "Hazard",
+      "description": "Reported hazards"
+    },
+    "/safeLocations/{locationId}": {
+      "schema": "SafeLocation",
+      "description": "Safe locations"
+    },
+    "/communityPosts/{postId}": {
+      "schema": "CommunityPost",
+      "description": "Community discussion posts"
+    }
+  }
+}
