@@ -8,6 +8,18 @@
       "dest": "/assets/$1"
     },
     {
+      "src": "/logo.png",
+      "dest": "/logo.png"
+    },
+    {
+      "src": "/water.gif",
+      "dest": "/water.gif"
+    },
+    {
+      "src": "/(.*\\.(png|gif|jpg|jpeg|svg|ico|webp|mp4|webm|woff|woff2|ttf|otf|eot))",
+      "dest": "/$1"
+    },
+    {
       "src": "/(.*)",
       "dest": "/index.html"
     }
