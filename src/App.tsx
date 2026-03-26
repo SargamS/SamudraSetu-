@@ -1094,62 +1094,55 @@ const Dashboard = () => {
 
 const Home = () => {
   return (
-    <div className="relative overflow-hidden bg-slate-950 text-white min-h-[calc(100vh-64px)] flex items-center">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(#3b82f6 1px, transparent 1px)', backgroundSize: '40px 40px' }}></div>
+    <section className="relative min-h-[calc(100vh-64px)] flex items-center px-6 overflow-hidden">
+      
+      {/* 🌊 Background GIF */}
+      <div className="absolute inset-0 z-0">
+        <img
+          src="/water.gif"
+          alt="water background"
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-black/60"></div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 py-20">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          <motion.div
-            initial={{ opacity: 0, x: -50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8 }}
-          >
-            <h1 className="text-5xl md:text-7xl font-bold tracking-tighter leading-tight mb-6">
-              Bridging Communities with <span className="text-blue-500">Maritime Safety</span>
-            </h1>
-            <p className="text-xl text-slate-400 mb-8 max-w-lg">
-              SAMUDRASETU connects coastal communities with maritime officials, enabling real-time hazard reporting and coordinated emergency response for safer seas.
-            </p>
-            <div className="flex flex-wrap gap-4">
-              <Link
-                to="/report"
-                className="bg-blue-600 hover:bg-blue-500 text-white px-8 py-4 rounded-lg font-bold text-lg transition-all transform hover:scale-105 flex items-center gap-2"
-              >
-                <AlertTriangle className="w-5 h-5" />
-                Report a Hazard
-              </Link>
-              <Link
-                to="/dashboard"
-                className="bg-slate-800 hover:bg-slate-700 text-white px-8 py-4 rounded-lg font-bold text-lg transition-all border border-slate-700 flex items-center gap-2"
-              >
-                <LayoutDashboard className="w-5 h-5" />
-                View Dashboard
-              </Link>
-            </div>
-          </motion.div>
+      {/* ✨ Content */}
+      <div className="relative z-10 max-w-7xl mx-auto w-full grid md:grid-cols-2 gap-10 items-center">
+        
+        {/* LEFT TEXT */}
+        <div className="text-white">
+          <h1 className="text-5xl md:text-7xl font-bold leading-tight mb-6">
+            Bridging Communities with{" "}
+            <span className="text-blue-400">Maritime Safety</span>
+          </h1>
 
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="hidden lg:block"
-          >
-            <div className="relative">
-              <div className="absolute -inset-4 bg-blue-500/20 blur-3xl rounded-full"></div>
-              <img 
-                src="https://picsum.photos/seed/maritime/800/600" 
-                alt="Maritime Safety" 
-                className="rounded-2xl shadow-2xl relative z-10 border border-slate-800"
-                referrerPolicy="no-referrer"
-              />
-            </div>
-          </motion.div>
+          <p className="text-lg text-white/80 mb-8 max-w-lg">
+            SAMUDRASETU connects coastal communities with maritime officials,
+            enabling real-time hazard reporting and coordinated emergency response
+            for safer seas.
+          </p>
+
+          <div className="flex flex-wrap gap-4">
+            <Link
+              to="/report"
+              className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg font-bold transition"
+            >
+              Report a Hazard
+            </Link>
+
+            <Link
+              to="/dashboard"
+              className="bg-white/20 backdrop-blur-md border border-white/30 px-6 py-3 rounded-lg font-bold text-white hover:bg-white/30 transition"
+            >
+              View Dashboard
+            </Link>
+          </div>
         </div>
+
+        {/* RIGHT SIDE REMOVED ❌ */}
+        <div className="hidden md:block"></div>
       </div>
-    </div>
+    </section>
   );
 };
 
