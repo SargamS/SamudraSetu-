@@ -51,8 +51,9 @@ service cloud.firestore {
         (request.resource.data.role == 'user' || isAdmin()) && 
         isValidEmail(request.resource.data.email);
         
-      allow update: if isOwner(userId) && 
-        (request.resource.data.role == resource.data.role || isAdmin());
+      // Admin can update anyone including role changes; users can update own non-role fields
+      allow update: if isAdmin() || 
+        (isOwner(userId) && request.resource.data.role == resource.data.role);
         
       allow delete: if isAdmin();
     }
@@ -78,6 +79,13 @@ service cloud.firestore {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated() && request.resource.data.authorUid == request.auth.uid;
       allow update, delete: if isAuthenticated() && (resource.data.authorUid == request.auth.uid || isAdmin());
+    }
+
+    // Media Posts Rules (community image uploads)
+    match /mediaPosts/{postId} {
+      allow read: if true; // Public so gallery loads without auth
+      allow create: if isAuthenticated() && request.resource.data.authorUid == request.auth.uid;
+      allow delete: if isAuthenticated() && (resource.data.authorUid == request.auth.uid || isAdmin());
     }
   }
 }
