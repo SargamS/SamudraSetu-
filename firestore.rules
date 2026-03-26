@@ -26,9 +26,16 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
+    // isAdminEmail: checks the Firebase Auth token directly — no Firestore read needed.
+    // This is the reliable fallback that always works.
+    function isAdminEmail() {
+      return isAuthenticated() && request.auth.token.email == "sargamshabina06@gmail.com";
+    }
+
+    // isAdmin: email check runs FIRST (no get() needed), then falls back to role in Firestore.
     function isAdmin() {
-      return isAuthenticated() && 
-        (request.auth.token.email == "sargamshabina06@gmail.com" ||
+      return isAdminEmail() ||
+        (isAuthenticated() &&
          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
     }
 
@@ -43,29 +50,30 @@ service cloud.firestore {
 
     // User Rules
     match /users/{userId} {
-      // Allow reading individual profiles for everyone, but listing only for admins
       allow get: if isAuthenticated();
-      allow list: if isAdmin();
-      
-      allow create: if isOwner(userId) && 
-        (request.resource.data.role == 'user' || isAdmin()) && 
+      // list uses isAdminEmail() to avoid recursive get() on the users collection
+      allow list: if isAdminEmail() || isAdmin();
+
+      allow create: if isOwner(userId) &&
+        (request.resource.data.role == 'user' || isAdmin()) &&
         isValidEmail(request.resource.data.email);
-        
-      // Admin can update anyone including role changes; users can update own non-role fields
-      allow update: if isAdmin() || 
+
+      // Admin can update anyone's role; users can only update their own non-role fields.
+      // isAdminEmail() is checked first so the admin can ALWAYS update without a get() dependency.
+      allow update: if isAdminEmail() || isAdmin() ||
         (isOwner(userId) && request.resource.data.role == resource.data.role);
-        
-      allow delete: if isAdmin();
+
+      allow delete: if isAdminEmail() || isAdmin();
     }
 
     // Hazard Rules
     match /hazards/{hazardId} {
-      allow read: if true; // Hazards are public for safety
-      allow create: if isAuthenticated() && 
+      allow read: if true;
+      allow create: if isAuthenticated() &&
         request.resource.data.authorUid == request.auth.uid &&
         request.resource.data.status == 'reported';
       allow update: if isOfficial() || (isAuthenticated() && resource.data.authorUid == request.auth.uid && request.resource.data.status == resource.data.status);
-      allow delete: if isAdmin();
+      allow delete: if isAdminEmail() || isAdmin();
     }
 
     // Safe Location Rules
@@ -83,7 +91,7 @@ service cloud.firestore {
 
     // Media Posts Rules (community image uploads)
     match /mediaPosts/{postId} {
-      allow read: if true; // Public so gallery loads without auth
+      allow read: if true;
       allow create: if isAuthenticated() && request.resource.data.authorUid == request.auth.uid;
       allow delete: if isAuthenticated() && (resource.data.authorUid == request.auth.uid || isAdmin());
     }
