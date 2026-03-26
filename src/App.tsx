@@ -217,7 +217,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode; requiredRole?: 'user
     const requiredRoleIndex = roles.indexOf(requiredRole);
     if (userRoleIndex < requiredRoleIndex) {
       return (
-        <div className="max-w-2xl mx-auto px-4 py-20 text-center text-slate-900">
+        <div className="max-w-2xl mx-auto px-4 py-20 text-center">
           <Shield className="w-16 h-16 text-red-500 mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-slate-900 mb-2">Access Denied</h2>
           <p className="text-slate-500">You do not have the required permissions ({requiredRole}) to view this page.</p>
@@ -399,7 +399,7 @@ const AdminPanel = () => {
   if (loading) return <div className="p-8 text-center text-white/70">Loading admin panel...</div>;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-12 text-slate-900">
+    <div className="max-w-7xl mx-auto px-4 py-12">
       <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-3xl font-bold tracking-tight text-white">Admin Console</h2>
@@ -621,7 +621,7 @@ const Navbar = () => {
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
             <Link to="/" className="flex items-center gap-2">
-              <Shield className="w-8 h-8 text-blue-400" />
+              <img src="/logo.png" alt="Samudrasetu" className="w-8 h-8 rounded-full bg-white p-0.5" />
               <span className="text-xl font-bold tracking-tight">SAMUDRASETU</span>
             </Link>
           </div>
@@ -723,51 +723,242 @@ const Navbar = () => {
   );
 };
 
+// Calamity stock images per type
+const CALAMITY_IMAGES: Record<string, string[]> = {
+  storm: [
+    'https://images.unsplash.com/photo-1527482797697-8795b05a13fe?w=400&q=80',
+    'https://images.unsplash.com/photo-1504370805625-d32c054d388b?w=400&q=80',
+    'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&q=80',
+  ],
+  oil_spill: [
+    'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80',
+    'https://images.unsplash.com/photo-1611273426858-450d8e3c9fce?w=400&q=80',
+    'https://images.unsplash.com/photo-1605000797499-95a51c5269ae?w=400&q=80',
+  ],
+  debris: [
+    'https://images.unsplash.com/photo-1518399651462-80e6c1e9c858?w=400&q=80',
+    'https://images.unsplash.com/photo-1542601906897-ecd0fc5f0c3c?w=400&q=80',
+    'https://images.unsplash.com/photo-1583001931096-959e9a1a6223?w=400&q=80',
+  ],
+  other: [
+    'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=400&q=80',
+    'https://images.unsplash.com/photo-1566024349863-2de09d4b3c9e?w=400&q=80',
+    'https://images.unsplash.com/photo-1437622368342-7a3d73a34c8f?w=400&q=80',
+  ],
+};
+
+interface MediaPost {
+  id: string;
+  imageUrl: string;
+  caption: string;
+  type: string;
+  authorName: string;
+  authorPhoto: string;
+  authorUid: string;
+  timestamp: string;
+}
+
 const MediaGallery = () => {
+  const { user, profile } = useAuth();
+  const [mediaPosts, setMediaPosts] = useState<MediaPost[]>([]);
   const [hazards, setHazards] = useState<Hazard[]>([]);
   const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
+  const [showUpload, setShowUpload] = useState(false);
+  const [caption, setCaption] = useState('');
+  const [incidentType, setIncidentType] = useState('storm');
+  const [imageDataUrl, setImageDataUrl] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'community' | 'calamities'>('community');
 
   useEffect(() => {
-    const q = query(collection(db, 'hazards'), orderBy('timestamp', 'desc'));
+    const q = query(collection(db, 'mediaPosts'), orderBy('timestamp', 'desc'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Hazard));
-      setHazards(data);
+      setMediaPosts(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as MediaPost)));
       setLoading(false);
     });
-    return unsubscribe;
+    const q2 = query(collection(db, 'hazards'), orderBy('timestamp', 'desc'));
+    const u2 = onSnapshot(q2, (snapshot) => {
+      setHazards(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Hazard)));
+    });
+    return () => { unsubscribe(); u2(); };
   }, []);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => setImageDataUrl(reader.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  const handleUpload = async () => {
+    if (!user || !imageDataUrl) return;
+    setUploading(true);
+    try {
+      await addDoc(collection(db, 'mediaPosts'), {
+        imageUrl: imageDataUrl,
+        caption,
+        type: incidentType,
+        authorName: profile?.displayName || 'Anonymous',
+        authorPhoto: user.photoURL || '',
+        authorUid: user.uid,
+        timestamp: new Date().toISOString(),
+      });
+      setCaption('');
+      setImageDataUrl(null);
+      setShowUpload(false);
+    } catch (err) {
+      console.error(err);
+      alert('Upload failed.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const deletePost = async (id: string) => {
+    if (!window.confirm('Delete this post?')) return;
+    await deleteDoc(doc(db, 'mediaPosts', id));
+  };
 
   if (loading) return <div className="p-8 text-center text-white/70">Loading gallery...</div>;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-12 text-slate-900">
-      <div className="mb-8">
-        <h2 className="text-3xl font-bold tracking-tight text-white">Media Gallery</h2>
-        <p className="text-white/70">Visual evidence of maritime hazards reported by the community.</p>
+    <div className="max-w-7xl mx-auto px-4 py-12">
+      <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight text-white">Media Gallery</h2>
+          <p className="text-white/70">Visual evidence of maritime incidents from the community.</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="flex bg-white/10 p-1 rounded-lg">
+            <button onClick={() => setActiveTab('community')} className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === 'community' ? 'bg-white text-slate-900 shadow-sm' : 'text-white/70 hover:text-white'}`}>Community</button>
+            <button onClick={() => setActiveTab('calamities')} className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === 'calamities' ? 'bg-white text-slate-900 shadow-sm' : 'text-white/70 hover:text-white'}`}>Calamity Types</button>
+          </div>
+          {user && (
+            <button onClick={() => setShowUpload(!showUpload)} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+              <Plus className="w-4 h-4" />
+              Upload Photo
+            </button>
+          )}
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {hazards.map((hazard, index) => (
+      {/* Upload Panel */}
+      <AnimatePresence>
+        {showUpload && user && (
           <motion.div
-            key={hazard.id}
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: index * 0.05 }}
-            className="group relative aspect-square overflow-hidden rounded-xl bg-slate-100 border border-slate-200"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="mb-8 bg-white rounded-2xl p-6 shadow-lg text-slate-900"
           >
-            <img 
-              src={hazard.imageUrl || `https://picsum.photos/seed/${hazard.id}/400/400`} 
-              alt={hazard.type}
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-              referrerPolicy="no-referrer"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-4">
-              <span className="text-white text-xs font-bold uppercase tracking-wider mb-1">{hazard.type}</span>
-              <span className="text-white/80 text-[10px]">{format(new Date(hazard.timestamp), 'MMM d, yyyy')}</span>
+            <h3 className="text-lg font-bold text-slate-900 mb-4">Upload Incident Photo</h3>
+            <div className="grid md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Select Image</label>
+                <input type="file" accept="image/*" onChange={handleFileChange} className="w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
+                {imageDataUrl && (
+                  <img src={imageDataUrl} alt="preview" className="mt-3 h-40 w-full object-cover rounded-lg border border-slate-200" />
+                )}
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Incident Type</label>
+                  <select value={incidentType} onChange={e => setIncidentType(e.target.value)} className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-900 bg-white outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="storm">Storm / Severe Weather</option>
+                    <option value="debris">Floating Debris</option>
+                    <option value="oil_spill">Oil Spill</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Caption</label>
+                  <textarea value={caption} onChange={e => setCaption(e.target.value)} rows={3} placeholder="Describe what you see..." className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-900 bg-white outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
+                </div>
+                <div className="flex gap-3">
+                  <button onClick={handleUpload} disabled={!imageDataUrl || uploading} className="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 rounded-lg transition-colors disabled:opacity-50">
+                    {uploading ? 'Uploading...' : 'Submit'}
+                  </button>
+                  <button onClick={() => { setShowUpload(false); setImageDataUrl(null); setCaption(''); }} className="px-4 py-2 border border-slate-300 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors">
+                    Cancel
+                  </button>
+                </div>
+              </div>
             </div>
           </motion.div>
-        ))}
-      </div>
+        )}
+      </AnimatePresence>
+
+      {activeTab === 'community' ? (
+        mediaPosts.length === 0 ? (
+          <div className="text-center py-20 text-white/50">
+            <Plus className="w-12 h-12 mx-auto mb-3 opacity-40" />
+            <p>No community photos yet. Be the first to upload!</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {mediaPosts.map((post, index) => (
+              <motion.div
+                key={post.id}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: index * 0.05 }}
+                className="group relative aspect-square overflow-hidden rounded-xl bg-slate-800 border border-slate-700"
+              >
+                <img src={post.imageUrl} alt={post.caption} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <img src={post.authorPhoto} alt="" className="w-5 h-5 rounded-full" />
+                    <span className="text-white/80 text-[10px]">{post.authorName}</span>
+                  </div>
+                  <span className="text-white text-xs font-bold uppercase tracking-wider mb-1">{post.type.replace('_', ' ')}</span>
+                  {post.caption && <p className="text-white/70 text-[10px] line-clamp-2">{post.caption}</p>}
+                  {(user?.uid === post.authorUid || profile?.role === 'admin') && (
+                    <button onClick={() => deletePost(post.id)} className="mt-2 self-start p-1 bg-red-600/80 rounded text-white hover:bg-red-600 transition-colors">
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                  )}
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        )
+      ) : (
+        <div className="space-y-10">
+          {(['storm', 'oil_spill', 'debris', 'other'] as const).map(type => (
+            <div key={type}>
+              <h3 className="text-xl font-bold text-white mb-4 capitalize flex items-center gap-2">
+                <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider ${
+                  type === 'storm' ? 'bg-red-500/20 text-red-300' :
+                  type === 'oil_spill' ? 'bg-orange-500/20 text-orange-300' :
+                  type === 'debris' ? 'bg-blue-500/20 text-blue-300' :
+                  'bg-slate-500/20 text-slate-300'
+                }`}>{type.replace('_', ' ')}</span>
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {CALAMITY_IMAGES[type].map((url, i) => (
+                  <div key={i} className="aspect-video overflow-hidden rounded-xl bg-slate-800 border border-slate-700">
+                    <img src={url} alt={type} className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" referrerPolicy="no-referrer" />
+                  </div>
+                ))}
+              </div>
+              {/* Also show community uploads of this type */}
+              {mediaPosts.filter(p => p.type === type).length > 0 && (
+                <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {mediaPosts.filter(p => p.type === type).map(post => (
+                    <div key={post.id} className="aspect-square overflow-hidden rounded-lg bg-slate-800 border border-slate-700 relative group">
+                      <img src={post.imageUrl} alt="" className="w-full h-full object-cover" />
+                      <div className="absolute bottom-0 left-0 right-0 bg-black/60 p-1 text-[9px] text-white/80 opacity-0 group-hover:opacity-100 transition-opacity">
+                        📸 {post.authorName}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
@@ -800,7 +991,7 @@ const Analytics = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-12 text-slate-900">
+    <div className="max-w-7xl mx-auto px-4 py-12">
       <div className="mb-8">
         <h2 className="text-3xl font-bold tracking-tight text-white">Safety Analytics</h2>
         <p className="text-white/70">Data-driven insights into coastal safety and response efficiency.</p>
@@ -865,7 +1056,7 @@ const Profile = () => {
   if (!user || !profile) return <Navigate to="/" />;
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-12 text-slate-900">
+    <div className="max-w-2xl mx-auto px-4 py-12">
       <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm text-center text-slate-900">
         <img src={user.photoURL || ''} alt="" className="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-blue-50" />
         <h2 className="text-2xl font-bold text-slate-900 mb-1">{profile.displayName}</h2>
@@ -945,7 +1136,7 @@ const Dashboard = () => {
   const isOfficial = profile?.role === 'official' || profile?.role === 'admin';
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-slate-900">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
         <div>
           <h2 className="text-3xl font-bold tracking-tight text-white">Live Hazard Feed</h2>
@@ -1107,25 +1298,24 @@ const Home = () => {
       </div>
 
       {/* ✨ Content */}
-      <div className="relative z-10 max-w-7xl mx-auto w-full grid md:grid-cols-2 gap-10 items-center">
+      <div className="relative z-10 max-w-4xl mx-auto w-full text-center">
         
-        {/* LEFT TEXT */}
         <div className="text-white">
           <h1 className="text-5xl md:text-7xl font-bold leading-tight mb-6">
             Bridging Communities with{" "}
             <span className="text-blue-400">Maritime Safety</span>
           </h1>
 
-          <p className="text-lg text-white/80 mb-8 max-w-lg">
+          <p className="text-lg text-white/80 mb-8 max-w-2xl mx-auto">
             SAMUDRASETU connects coastal communities with maritime officials,
             enabling real-time hazard reporting and coordinated emergency response
             for safer seas.
           </p>
 
-          <div className="flex flex-wrap gap-4">
+          <div className="flex flex-wrap gap-4 justify-center">
             <Link
               to="/report"
-              className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg font-bold transition"
+              className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg font-bold transition text-white"
             >
               Report a Hazard
             </Link>
@@ -1138,9 +1328,6 @@ const Home = () => {
             </Link>
           </div>
         </div>
-
-        {/* RIGHT SIDE REMOVED ❌ */}
-        <div className="hidden md:block"></div>
       </div>
     </section>
   );
@@ -1186,7 +1373,7 @@ const ReportHazard = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-12 text-slate-900">
+    <div className="max-w-2xl mx-auto px-4 py-12">
       <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm text-slate-900">
         <h2 className="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-2">
           <AlertTriangle className="w-6 h-6 text-red-500" />
@@ -1284,9 +1471,18 @@ const ReportHazard = () => {
 };
 
 const SafeLocations = () => {
+  const { user, profile } = useAuth();
   const [locations, setLocations] = useState<SafeLocation[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showForm, setShowForm] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '', description: '', locality: '',
+    latitude: 0, longitude: 0, type: 'shelter' as SafeLocation['type']
+  });
+
+  const isOfficial = profile?.role === 'official' || profile?.role === 'admin';
 
   useEffect(() => {
     const q = query(collection(db, 'safeLocations'));
@@ -1298,12 +1494,37 @@ const SafeLocations = () => {
     return unsubscribe;
   }, []);
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !isOfficial) return;
+    setSubmitting(true);
+    try {
+      await addDoc(collection(db, 'safeLocations'), {
+        name: formData.name,
+        description: formData.description,
+        locality: formData.locality,
+        coordinates: { latitude: formData.latitude, longitude: formData.longitude },
+        type: formData.type,
+        addedBy: profile?.displayName || 'Official',
+        addedByUid: user.uid,
+        timestamp: new Date().toISOString(),
+      });
+      setFormData({ name: '', description: '', locality: '', latitude: 0, longitude: 0, type: 'shelter' });
+      setShowForm(false);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to add location.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const filteredLocations = locations
-    .filter((loc, index, self) => 
+    .filter((loc, index, self) =>
       index === self.findIndex((t) => t.name === loc.name)
     )
-    .filter(loc => 
-      loc.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    .filter(loc =>
+      loc.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       loc.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
       loc.locality?.toLowerCase().includes(searchQuery.toLowerCase())
     );
@@ -1311,23 +1532,89 @@ const SafeLocations = () => {
   if (loading) return <div className="p-8 text-center text-white/70">Loading safe locations...</div>;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-12 text-slate-900">
+    <div className="max-w-7xl mx-auto px-4 py-12">
       <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-3xl font-bold tracking-tight text-white">Safe Locations</h2>
           <p className="text-white/70">Find the nearest shelters and emergency services.</p>
         </div>
-        <div className="relative w-full md:w-96">
-          <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-          <input
-            type="text"
-            placeholder="Search by locality or name (e.g. Mumbai, Shelter)..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-900 bg-white"
-          />
+        <div className="flex items-center gap-3">
+          <div className="relative w-full md:w-72">
+            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Search by locality or name..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-slate-900 bg-white"
+            />
+          </div>
+          {isOfficial && (
+            <button onClick={() => setShowForm(!showForm)} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap">
+              <Plus className="w-4 h-4" />
+              Add Location
+            </button>
+          )}
         </div>
       </div>
+
+      {/* Add Location Form (officials/admins only) */}
+      <AnimatePresence>
+        {showForm && isOfficial && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="mb-8 bg-white rounded-2xl p-6 shadow-lg text-slate-900"
+          >
+            <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+              <MapPin className="w-5 h-5 text-blue-600" />
+              Add Safe Location
+            </h3>
+            <form onSubmit={handleSubmit} className="grid md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Name *</label>
+                <input required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="e.g. Mumbai Emergency Shelter" className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-900 bg-white outline-none focus:ring-2 focus:ring-blue-500" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Locality *</label>
+                <input required value={formData.locality} onChange={e => setFormData({...formData, locality: e.target.value})} placeholder="e.g. Mumbai" className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-900 bg-white outline-none focus:ring-2 focus:ring-blue-500" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Type *</label>
+                <select value={formData.type} onChange={e => setFormData({...formData, type: e.target.value as SafeLocation['type']})} className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-900 bg-white outline-none focus:ring-2 focus:ring-blue-500">
+                  <option value="shelter">Shelter</option>
+                  <option value="hospital">Hospital</option>
+                  <option value="police">Police / Coast Guard</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Latitude *</label>
+                  <input required type="number" step="any" value={formData.latitude} onChange={e => setFormData({...formData, latitude: parseFloat(e.target.value)})} className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-900 bg-white outline-none focus:ring-2 focus:ring-blue-500" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Longitude *</label>
+                  <input required type="number" step="any" value={formData.longitude} onChange={e => setFormData({...formData, longitude: parseFloat(e.target.value)})} className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-900 bg-white outline-none focus:ring-2 focus:ring-blue-500" />
+                </div>
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-slate-700 mb-1">Description *</label>
+                <textarea required rows={2} value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} placeholder="Describe the facilities available..." className="w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-900 bg-white outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
+              </div>
+              <div className="md:col-span-2 flex gap-3">
+                <button type="submit" disabled={submitting} className="bg-blue-600 hover:bg-blue-500 text-white font-bold px-6 py-2 rounded-lg transition-colors disabled:opacity-50">
+                  {submitting ? 'Adding...' : 'Add Location'}
+                </button>
+                <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 border border-slate-300 rounded-lg text-slate-600 hover:bg-slate-50">
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {filteredLocations.length > 0 ? filteredLocations.map((loc) => (
@@ -1349,7 +1636,7 @@ const SafeLocations = () => {
                   <Navigation className="w-3 h-3" />
                   {loc.coordinates.latitude}, {loc.coordinates.longitude}
                 </span>
-                <a 
+                <a
                   href={`https://www.google.com/maps/search/?api=1&query=${loc.coordinates.latitude},${loc.coordinates.longitude}`}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -1362,9 +1649,9 @@ const SafeLocations = () => {
             </div>
           </div>
         )) : (
-          <div className="col-span-full p-12 text-center bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
-            <MapPin className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-            <p className="text-slate-500">No safe locations found matching your search.</p>
+          <div className="col-span-full p-12 text-center bg-white/10 rounded-2xl border-2 border-dashed border-white/20">
+            <MapPin className="w-12 h-12 text-white/30 mx-auto mb-4" />
+            <p className="text-white/50">No safe locations found matching your search.</p>
           </div>
         )}
       </div>
@@ -1409,7 +1696,7 @@ const Community = () => {
   if (loading) return <div className="p-8 text-center text-white/70">Loading community...</div>;
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-12 text-slate-900">
+    <div className="max-w-3xl mx-auto px-4 py-12">
       <div className="mb-8">
         <h2 className="text-3xl font-bold tracking-tight text-white">Community Board</h2>
         <p className="text-white/70">Connect with other coastal residents and officials.</p>
@@ -1504,7 +1791,7 @@ export default function App() {
                   
                   <div>
                     <div className="flex items-center gap-2 mb-4">
-                      <Shield className="w-6 h-6 text-blue-400" />
+                      <img src="/logo.png" alt="Samudrasetu" className="w-6 h-6 rounded-full bg-white p-0.5" />
                       <span className="text-lg font-bold text-white tracking-tight">SAMUDRASETU</span>
                     </div>
                     <p className="text-sm">
