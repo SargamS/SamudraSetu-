@@ -402,8 +402,8 @@ const AdminPanel = () => {
     <div className="max-w-7xl mx-auto px-4 py-12 text-slate-900">
       <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight text-slate-900">Admin Console</h2>
-          <p className="text-slate-500">Manage users, hazards, and platform safety.</p>
+          <h2 className="text-3xl font-bold tracking-tight text-white">Admin Console</h2>
+          <p className="text-white/70">Manage users, hazards, and platform safety.</p>
         </div>
         <div className="flex bg-slate-100 p-1 rounded-lg text-slate-700">
           <button 
@@ -742,8 +742,8 @@ const MediaGallery = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 py-12 text-slate-900">
       <div className="mb-8">
-        <h2 className="text-3xl font-bold tracking-tight text-slate-900">Media Gallery</h2>
-        <p className="text-slate-500">Visual evidence of maritime hazards reported by the community.</p>
+        <h2 className="text-3xl font-bold tracking-tight text-white">Media Gallery</h2>
+        <p className="text-white/70">Visual evidence of maritime hazards reported by the community.</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -802,8 +802,8 @@ const Analytics = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 py-12 text-slate-900">
       <div className="mb-8">
-        <h2 className="text-3xl font-bold tracking-tight text-slate-900">Safety Analytics</h2>
-        <p className="text-slate-500">Data-driven insights into coastal safety and response efficiency.</p>
+        <h2 className="text-3xl font-bold tracking-tight text-white">Safety Analytics</h2>
+        <p className="text-white/70">Data-driven insights into coastal safety and response efficiency.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
@@ -948,8 +948,8 @@ const Dashboard = () => {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-slate-900">
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight text-slate-900">Live Hazard Feed</h2>
-          <p className="text-slate-500">Real-time monitoring of coastal and maritime threats.</p>
+          <h2 className="text-3xl font-bold tracking-tight text-white">Live Hazard Feed</h2>
+          <p className="text-white/70">Real-time monitoring of coastal and maritime threats.</p>
         </div>
         <div className="flex items-center gap-4">
           <select 
@@ -1314,8 +1314,8 @@ const SafeLocations = () => {
     <div className="max-w-7xl mx-auto px-4 py-12 text-slate-900">
       <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight text-slate-900">Safe Locations</h2>
-          <p className="text-slate-500">Find the nearest shelters and emergency services.</p>
+          <h2 className="text-3xl font-bold tracking-tight text-white">Safe Locations</h2>
+          <p className="text-white/70">Find the nearest shelters and emergency services.</p>
         </div>
         <div className="relative w-full md:w-96">
           <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
@@ -1411,8 +1411,8 @@ const Community = () => {
   return (
     <div className="max-w-3xl mx-auto px-4 py-12 text-slate-900">
       <div className="mb-8">
-        <h2 className="text-3xl font-bold tracking-tight text-slate-900">Community Board</h2>
-        <p className="text-slate-500">Connect with other coastal residents and officials.</p>
+        <h2 className="text-3xl font-bold tracking-tight text-white">Community Board</h2>
+        <p className="text-white/70">Connect with other coastal residents and officials.</p>
       </div>
 
       {user && (
