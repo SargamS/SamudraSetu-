@@ -208,7 +208,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 const ProtectedRoute: React.FC<{ children: React.ReactNode; requiredRole?: 'user' | 'official' | 'admin' }> = ({ children, requiredRole }) => {
   const { user, profile, loading } = useAuth();
 
-  if (loading) return <div className="p-8 text-center text-slate-400">Verifying access...</div>;
+  if (loading) return <div className="p-8 text-center text-white/70">Verifying access...</div>;
   if (!user) return <Navigate to="/" />;
 
   if (requiredRole) {
@@ -217,7 +217,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode; requiredRole?: 'user
     const requiredRoleIndex = roles.indexOf(requiredRole);
     if (userRoleIndex < requiredRoleIndex) {
       return (
-        <div className="max-w-2xl mx-auto px-4 py-20 text-center">
+        <div className="max-w-2xl mx-auto px-4 py-20 text-center text-slate-900">
           <Shield className="w-16 h-16 text-red-500 mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-slate-900 mb-2">Access Denied</h2>
           <p className="text-slate-500">You do not have the required permissions ({requiredRole}) to view this page.</p>
@@ -396,7 +396,7 @@ const AdminPanel = () => {
     }
   };
 
-  if (loading) return <div className="p-8 text-center text-slate-400">Loading admin panel...</div>;
+  if (loading) return <div className="p-8 text-center text-white/70">Loading admin panel...</div>;
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-12 text-slate-900">
@@ -405,7 +405,7 @@ const AdminPanel = () => {
           <h2 className="text-3xl font-bold tracking-tight text-slate-900">Admin Console</h2>
           <p className="text-slate-500">Manage users, hazards, and platform safety.</p>
         </div>
-        <div className="flex bg-slate-100 p-1 rounded-lg">
+        <div className="flex bg-slate-100 p-1 rounded-lg text-slate-700">
           <button 
             onClick={() => setActiveTab('users')}
             className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === 'users' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
@@ -445,7 +445,7 @@ const AdminPanel = () => {
       </div>
 
       {activeTab === 'users' ? (
-        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm text-slate-900">
           <table className="w-full text-left border-collapse">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
@@ -479,7 +479,7 @@ const AdminPanel = () => {
                       <select
                         value={u.role}
                         onChange={(e) => updateUserRole(u.uid, e.target.value as any)}
-                        className="text-sm border border-slate-300 rounded px-2 py-1 outline-none focus:ring-2 focus:ring-blue-500"
+                        className="text-sm border border-slate-300 rounded px-2 py-1 outline-none focus:ring-2 focus:ring-blue-500 text-slate-900 bg-white"
                       >
                         <option value="user">User</option>
                         <option value="official">Official</option>
@@ -502,7 +502,7 @@ const AdminPanel = () => {
       ) : activeTab === 'hazards' ? (
         <div className="grid grid-cols-1 gap-4">
           {hazards.map((h) => (
-            <div key={h.id} className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm flex flex-col md:flex-row justify-between gap-4">
+            <div key={h.id} className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm flex flex-col md:flex-row justify-between gap-4 text-slate-900">
               <div className="flex-grow">
                 <div className="flex items-center gap-2 mb-2">
                   <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
@@ -556,7 +556,7 @@ const AdminPanel = () => {
           ))}
         </div>
       ) : (
-        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm text-slate-900">
           <table className="w-full text-left border-collapse">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
@@ -737,10 +737,10 @@ const MediaGallery = () => {
     return unsubscribe;
   }, []);
 
-  if (loading) return <div className="p-8 text-center text-slate-400">Loading gallery...</div>;
+  if (loading) return <div className="p-8 text-center text-white/70">Loading gallery...</div>;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-12">
+    <div className="max-w-7xl mx-auto px-4 py-12 text-slate-900">
       <div className="mb-8">
         <h2 className="text-3xl font-bold tracking-tight text-slate-900">Media Gallery</h2>
         <p className="text-slate-500">Visual evidence of maritime hazards reported by the community.</p>
@@ -786,7 +786,7 @@ const Analytics = () => {
     return unsubscribe;
   }, []);
 
-  if (loading) return <div className="p-8 text-center text-slate-400">Loading analytics...</div>;
+  if (loading) return <div className="p-8 text-center text-white/70">Loading analytics...</div>;
 
   const stats = {
     total: hazards.length,
@@ -800,33 +800,33 @@ const Analytics = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-12">
+    <div className="max-w-7xl mx-auto px-4 py-12 text-slate-900">
       <div className="mb-8">
         <h2 className="text-3xl font-bold tracking-tight text-slate-900">Safety Analytics</h2>
         <p className="text-slate-500">Data-driven insights into coastal safety and response efficiency.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm text-slate-900">
           <p className="text-sm font-medium text-slate-500 mb-1">Total Hazards</p>
           <p className="text-4xl font-bold text-slate-900">{stats.total}</p>
         </div>
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm text-slate-900">
           <p className="text-sm font-medium text-slate-500 mb-1">Resolved</p>
           <p className="text-4xl font-bold text-green-600">{stats.resolved}</p>
         </div>
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm text-slate-900">
           <p className="text-sm font-medium text-slate-500 mb-1">Verified</p>
           <p className="text-4xl font-bold text-blue-600">{stats.verified}</p>
         </div>
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm text-slate-900">
           <p className="text-sm font-medium text-slate-500 mb-1">Pending</p>
           <p className="text-4xl font-bold text-orange-600">{stats.reported}</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
+        <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm text-slate-900">
           <h3 className="text-xl font-bold text-slate-900 mb-6">Hazards by Type</h3>
           <div className="space-y-4">
             {Object.entries(stats.byType).map(([type, count]) => (
@@ -846,7 +846,7 @@ const Analytics = () => {
           </div>
         </div>
 
-        <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-center items-center text-center">
+        <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-center items-center text-center text-slate-900">
           <CheckCircle2 className="w-16 h-16 text-green-500 mb-4" />
           <h3 className="text-2xl font-bold text-slate-900 mb-2">Response Rate</h3>
           <p className="text-5xl font-bold text-slate-900 mb-4">
@@ -865,8 +865,8 @@ const Profile = () => {
   if (!user || !profile) return <Navigate to="/" />;
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-12">
-      <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm text-center">
+    <div className="max-w-2xl mx-auto px-4 py-12 text-slate-900">
+      <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm text-center text-slate-900">
         <img src={user.photoURL || ''} alt="" className="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-blue-50" />
         <h2 className="text-2xl font-bold text-slate-900 mb-1">{profile.displayName}</h2>
         <p className="text-slate-500 mb-6">{profile.email}</p>
@@ -940,7 +940,7 @@ const Dashboard = () => {
 
   const filteredHazards = filter === 'all' ? hazards : hazards.filter(h => h.type === filter);
 
-  if (loading) return <div className="p-8 text-center text-slate-400">Loading dashboard...</div>;
+  if (loading) return <div className="p-8 text-center text-white/70">Loading dashboard...</div>;
 
   const isOfficial = profile?.role === 'official' || profile?.role === 'admin';
 
@@ -955,7 +955,7 @@ const Dashboard = () => {
           <select 
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
-            className="bg-white border border-slate-200 rounded-md px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+            className="bg-white border border-slate-200 rounded-md px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 text-slate-900"
           >
             <option value="all">All Hazards</option>
             <option value="storm">Storms</option>
@@ -1033,7 +1033,7 @@ const Dashboard = () => {
           <motion.div
             layout
             key={hazard.id}
-            className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col"
+            className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col text-slate-900"
           >
             <div className="p-5 flex-grow">
               <div className="flex items-center justify-between mb-4">
@@ -1186,8 +1186,8 @@ const ReportHazard = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-12">
-      <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm">
+    <div className="max-w-2xl mx-auto px-4 py-12 text-slate-900">
+      <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm text-slate-900">
         <h2 className="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-2">
           <AlertTriangle className="w-6 h-6 text-red-500" />
           Report Maritime Hazard
@@ -1198,7 +1198,7 @@ const ReportHazard = () => {
             <select
               value={formData.type}
               onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-              className="w-full border border-slate-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+              className="w-full border border-slate-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-slate-900 bg-white"
             >
               <option value="storm">Storm / Severe Weather</option>
               <option value="debris">Floating Debris</option>
@@ -1214,7 +1214,7 @@ const ReportHazard = () => {
               value={formData.address}
               onChange={(e) => setFormData({ ...formData, address: e.target.value })}
               placeholder="e.g. 5 miles off Mumbai Coast"
-              className="w-full border border-slate-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+              className="w-full border border-slate-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-slate-900 bg-white"
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
@@ -1226,7 +1226,7 @@ const ReportHazard = () => {
                 required
                 value={formData.latitude}
                 onChange={(e) => setFormData({ ...formData, latitude: parseFloat(e.target.value) })}
-                className="w-full border border-slate-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                className="w-full border border-slate-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-slate-900 bg-white"
               />
             </div>
             <div>
@@ -1237,7 +1237,7 @@ const ReportHazard = () => {
                 required
                 value={formData.longitude}
                 onChange={(e) => setFormData({ ...formData, longitude: parseFloat(e.target.value) })}
-                className="w-full border border-slate-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                className="w-full border border-slate-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-slate-900 bg-white"
               />
             </div>
           </div>
@@ -1267,7 +1267,7 @@ const ReportHazard = () => {
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               placeholder="Describe the hazard in detail..."
-              className="w-full border border-slate-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+              className="w-full border border-slate-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-slate-900 bg-white"
             ></textarea>
           </div>
           <button
@@ -1308,10 +1308,10 @@ const SafeLocations = () => {
       loc.locality?.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-  if (loading) return <div className="p-8 text-center text-slate-400">Loading safe locations...</div>;
+  if (loading) return <div className="p-8 text-center text-white/70">Loading safe locations...</div>;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-12">
+    <div className="max-w-7xl mx-auto px-4 py-12 text-slate-900">
       <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-3xl font-bold tracking-tight text-slate-900">Safe Locations</h2>
@@ -1324,14 +1324,14 @@ const SafeLocations = () => {
             placeholder="Search by locality or name (e.g. Mumbai, Shelter)..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-900 bg-white"
           />
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {filteredLocations.length > 0 ? filteredLocations.map((loc) => (
-          <div key={loc.id} className="bg-white border border-slate-200 rounded-xl p-6 flex gap-4 hover:border-blue-200 transition-colors group">
+          <div key={loc.id} className="bg-white border border-slate-200 rounded-xl p-6 flex gap-4 hover:border-blue-200 transition-colors group text-slate-900">
             <div className="bg-blue-50 p-3 rounded-lg h-fit group-hover:bg-blue-100 transition-colors">
               <MapPin className="w-6 h-6 text-blue-600" />
             </div>
@@ -1406,17 +1406,17 @@ const Community = () => {
     }
   };
 
-  if (loading) return <div className="p-8 text-center text-slate-400">Loading community...</div>;
+  if (loading) return <div className="p-8 text-center text-white/70">Loading community...</div>;
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-12">
+    <div className="max-w-3xl mx-auto px-4 py-12 text-slate-900">
       <div className="mb-8">
         <h2 className="text-3xl font-bold tracking-tight text-slate-900">Community Board</h2>
         <p className="text-slate-500">Connect with other coastal residents and officials.</p>
       </div>
 
       {user && (
-        <form onSubmit={handlePost} className="bg-white border border-slate-200 rounded-xl p-4 mb-8 shadow-sm">
+        <form onSubmit={handlePost} className="bg-white border border-slate-200 rounded-xl p-4 mb-8 shadow-sm text-slate-900">
           <textarea
             value={newPost}
             onChange={(e) => setNewPost(e.target.value)}
@@ -1438,7 +1438,7 @@ const Community = () => {
 
       <div className="space-y-6">
         {posts.map((post) => (
-          <div key={post.id} className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+          <div key={post.id} className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm text-slate-900">
             <div className="flex items-center gap-3 mb-4">
               <img src={post.authorPhoto} alt="" className="w-10 h-10 rounded-full border border-slate-100" />
               <div>
@@ -1460,10 +1460,10 @@ export default function App() {
   return (
     <AuthProvider>
       <Router>
-        <div className="min-h-screen bg-[url('/water.gif')] bg-cover bg-center bg-fixed font-sans text-white">
+        <div className="min-h-screen bg-[url('/water.gif')] bg-cover bg-center bg-fixed font-sans">
           
           {/* Overlay */}
-          <div className="min-h-screen bg-black/40">
+          <div className="min-h-screen bg-black/40 text-white">
 
             <Navbar />
 
