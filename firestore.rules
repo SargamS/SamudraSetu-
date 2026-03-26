@@ -1,21 +1,6 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // ===============================================================
-    // Assumed Data Model
-    // ===============================================================
-    // Collection: users
-    // Fields: uid, displayName, email, photoURL, role, createdAt
-    //
-    // Collection: hazards
-    // Fields: id, type, description, location (lat, lng, address), status, authorUid, authorName, timestamp, imageUrl
-    //
-    // Collection: safeLocations
-    // Fields: id, name, description, coordinates (lat, lng), type
-    //
-    // Collection: communityPosts
-    // Fields: id, authorUid, authorName, authorPhoto, content, timestamp
-    // ===============================================================
 
     // Helper Functions
     function isAuthenticated() {
@@ -26,13 +11,12 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
-    // isAdminEmail: checks the Firebase Auth token directly — no Firestore read needed.
-    // This is the reliable fallback that always works.
+    // Checks the Firebase Auth JWT directly — no Firestore read needed, never fails.
     function isAdminEmail() {
       return isAuthenticated() && request.auth.token.email == "sargamshabina06@gmail.com";
     }
 
-    // isAdmin: email check runs FIRST (no get() needed), then falls back to role in Firestore.
+    // For non-user collections: safe to do a get() since it won't recurse.
     function isAdmin() {
       return isAdminEmail() ||
         (isAuthenticated() &&
@@ -40,7 +24,7 @@ service cloud.firestore {
     }
 
     function isOfficial() {
-      return isAuthenticated() && 
+      return isAuthenticated() &&
         (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'official' || isAdmin());
     }
 
@@ -48,52 +32,60 @@ service cloud.firestore {
       return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
     }
 
-    // User Rules
+    // ── Users ──────────────────────────────────────────────────────────────────
     match /users/{userId} {
+      // Any logged-in user can read individual profiles (needed for role checks elsewhere)
       allow get: if isAuthenticated();
-      // list uses isAdminEmail() to avoid recursive get() on the users collection
-      allow list: if isAdminEmail() || isAdmin();
 
+      // Only the admin email can list all users (avoids get() recursion on the users collection)
+      allow list: if isAdminEmail();
+
+      // New accounts can only be created as 'user' unless the admin is creating them
       allow create: if isOwner(userId) &&
-        (request.resource.data.role == 'user' || isAdmin()) &&
+        (request.resource.data.role == 'user' || isAdminEmail()) &&
         isValidEmail(request.resource.data.email);
 
-      // Admin can update anyone's role; users can only update their own non-role fields.
-      // isAdminEmail() is checked first so the admin can ALWAYS update without a get() dependency.
-      allow update: if isAdminEmail() || isAdmin() ||
+      // Admin can update anyone's role or profile.
+      // Other users can update their own profile but NOT change their role.
+      allow update: if isAdminEmail() ||
         (isOwner(userId) && request.resource.data.role == resource.data.role);
 
-      allow delete: if isAdminEmail() || isAdmin();
+      allow delete: if isAdminEmail();
     }
 
-    // Hazard Rules
+    // ── Hazards ────────────────────────────────────────────────────────────────
     match /hazards/{hazardId} {
       allow read: if true;
       allow create: if isAuthenticated() &&
         request.resource.data.authorUid == request.auth.uid &&
         request.resource.data.status == 'reported';
-      allow update: if isOfficial() || (isAuthenticated() && resource.data.authorUid == request.auth.uid && request.resource.data.status == resource.data.status);
-      allow delete: if isAdminEmail() || isAdmin();
+      allow update: if isOfficial() ||
+        (isAuthenticated() &&
+         resource.data.authorUid == request.auth.uid &&
+         request.resource.data.status == resource.data.status);
+      allow delete: if isAdmin();
     }
 
-    // Safe Location Rules
+    // ── Safe Locations ─────────────────────────────────────────────────────────
     match /safeLocations/{locationId} {
       allow read: if true;
       allow write: if isOfficial();
     }
 
-    // Community Post Rules
+    // ── Community Posts ────────────────────────────────────────────────────────
     match /communityPosts/{postId} {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated() && request.resource.data.authorUid == request.auth.uid;
-      allow update, delete: if isAuthenticated() && (resource.data.authorUid == request.auth.uid || isAdmin());
+      allow update, delete: if isAuthenticated() &&
+        (resource.data.authorUid == request.auth.uid || isAdmin());
     }
 
-    // Media Posts Rules (community image uploads)
+    // ── Media Posts ────────────────────────────────────────────────────────────
     match /mediaPosts/{postId} {
       allow read: if true;
       allow create: if isAuthenticated() && request.resource.data.authorUid == request.auth.uid;
-      allow delete: if isAuthenticated() && (resource.data.authorUid == request.auth.uid || isAdmin());
+      allow delete: if isAuthenticated() &&
+        (resource.data.authorUid == request.auth.uid || isAdmin());
     }
   }
 }
