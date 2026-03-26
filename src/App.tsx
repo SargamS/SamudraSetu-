@@ -771,15 +771,28 @@ const MediaGallery = () => {
   const [activeTab, setActiveTab] = useState<'community' | 'calamities'>('community');
 
   useEffect(() => {
-    const q = query(collection(db, 'mediaPosts'), orderBy('timestamp', 'desc'));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      setMediaPosts(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as MediaPost)));
-      setLoading(false);
-    });
-    const q2 = query(collection(db, 'hazards'), orderBy('timestamp', 'desc'));
-    const u2 = onSnapshot(q2, (snapshot) => {
-      setHazards(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Hazard)));
-    });
+    // Use simple collection query (no orderBy) to avoid needing Firestore index
+    const q = query(collection(db, 'mediaPosts'));
+    const unsubscribe = onSnapshot(q,
+      (snapshot) => {
+        const posts = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as MediaPost));
+        // Sort client-side to avoid needing composite index
+        posts.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+        setMediaPosts(posts);
+        setLoading(false);
+      },
+      (error) => {
+        console.error('mediaPosts error:', error);
+        setLoading(false); // Don't hang on error
+      }
+    );
+    const q2 = query(collection(db, 'hazards'));
+    const u2 = onSnapshot(q2,
+      (snapshot) => {
+        setHazards(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Hazard)));
+      },
+      (error) => console.error('hazards error:', error)
+    );
     return () => { unsubscribe(); u2(); };
   }, []);
 
@@ -1744,6 +1757,16 @@ const Community = () => {
 // --- Main App ---
 
 export default function App() {
+  // Force title and favicon regardless of what index.html says
+  React.useEffect(() => {
+    document.title = 'Samudrasetu';
+    const link = document.querySelector("link[rel~='icon']") as HTMLLinkElement || document.createElement('link');
+    link.type = 'image/png';
+    link.rel = 'icon';
+    link.href = '/logo.png';
+    document.head.appendChild(link);
+  }, []);
+
   return (
     <AuthProvider>
       <Router>
