@@ -231,6 +231,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode; requiredRole?: 'user
 };
 
 const AdminPanel = () => {
+  const { user: currentUser } = useAuth();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [hazards, setHazards] = useState<Hazard[]>([]);
   const [safeLocations, setSafeLocations] = useState<SafeLocation[]>([]);
@@ -491,22 +492,28 @@ const AdminPanel = () => {
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
-                      <select
-                        value={u.role}
-                        onChange={(e) => updateUserRole(u.uid, e.target.value as any)}
-                        className="text-sm border border-slate-300 rounded px-2 py-1 outline-none focus:ring-2 focus:ring-blue-500 text-slate-900 bg-white"
-                      >
-                        <option value="user">User</option>
-                        <option value="official">Official</option>
-                        <option value="admin">Admin</option>
-                      </select>
-                      <button 
-                        onClick={() => deleteUser(u.uid)}
-                        className="p-1.5 text-slate-400 hover:text-red-600 transition-colors"
-                        title="Delete User"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      {currentUser?.uid === u.uid ? (
+                        <span className="text-xs text-slate-400 italic px-2 py-1">You (cannot edit own role)</span>
+                      ) : (
+                        <>
+                          <select
+                            value={u.role}
+                            onChange={(e) => updateUserRole(u.uid, e.target.value as any)}
+                            className="text-sm border border-slate-300 rounded px-2 py-1 outline-none focus:ring-2 focus:ring-blue-500 text-slate-900 bg-white"
+                          >
+                            <option value="user">User</option>
+                            <option value="official">Official</option>
+                            <option value="admin">Admin</option>
+                          </select>
+                          <button
+                            onClick={() => deleteUser(u.uid)}
+                            className="p-1.5 text-slate-400 hover:text-red-600 transition-colors"
+                            title="Delete User"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </>
+                      )}
                     </div>
                   </td>
                 </tr>
