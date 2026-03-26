@@ -723,27 +723,27 @@ const Navbar = () => {
   );
 };
 
-// Calamity stock images per type
+// Calamity stock images per type — verified working Unsplash photo IDs
 const CALAMITY_IMAGES: Record<string, string[]> = {
   storm: [
-    'https://images.unsplash.com/photo-1527482797697-8795b05a13fe?w=400&q=80',
-    'https://images.unsplash.com/photo-1504370805625-d32c054d388b?w=400&q=80',
-    'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&q=80',
+    'https://images.unsplash.com/photo-1561484930-998b6a7b22e8?w=800&q=80&fit=crop',
+    'https://images.unsplash.com/photo-1504370805625-d32c054d388b?w=800&q=80&fit=crop',
+    'https://images.unsplash.com/photo-1605727216801-e27ce1d0cc28?w=800&q=80&fit=crop',
   ],
   oil_spill: [
-    'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80',
-    'https://images.unsplash.com/photo-1611273426858-450d8e3c9fce?w=400&q=80',
-    'https://images.unsplash.com/photo-1605000797499-95a51c5269ae?w=400&q=80',
+    'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80&fit=crop',
+    'https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?w=800&q=80&fit=crop',
+    'https://images.unsplash.com/photo-1611270418597-a6c77f4b7271?w=800&q=80&fit=crop',
   ],
   debris: [
-    'https://images.unsplash.com/photo-1518399651462-80e6c1e9c858?w=400&q=80',
-    'https://images.unsplash.com/photo-1542601906897-ecd0fc5f0c3c?w=400&q=80',
-    'https://images.unsplash.com/photo-1583001931096-959e9a1a6223?w=400&q=80',
+    'https://images.unsplash.com/photo-1621451537084-482c73073a0f?w=800&q=80&fit=crop',
+    'https://images.unsplash.com/photo-1604187351574-c75ca79f5807?w=800&q=80&fit=crop',
+    'https://images.unsplash.com/photo-1583484963886-cfe2bff2945f?w=800&q=80&fit=crop',
   ],
   other: [
-    'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=400&q=80',
-    'https://images.unsplash.com/photo-1566024349863-2de09d4b3c9e?w=400&q=80',
-    'https://images.unsplash.com/photo-1437622368342-7a3d73a34c8f?w=400&q=80',
+    'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=800&q=80&fit=crop',
+    'https://images.unsplash.com/photo-1505118380757-91f5f5632de0?w=800&q=80&fit=crop',
+    'https://images.unsplash.com/photo-1437622368342-7a3d73a34c8f?w=800&q=80&fit=crop',
   ],
 };
 
@@ -950,8 +950,25 @@ const MediaGallery = () => {
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {CALAMITY_IMAGES[type].map((url, i) => (
-                  <div key={i} className="aspect-video overflow-hidden rounded-xl bg-slate-800 border border-slate-700">
-                    <img src={url} alt={type} className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" referrerPolicy="no-referrer" />
+                  <div key={i} className="aspect-video overflow-hidden rounded-xl bg-slate-800 border border-slate-700 relative">
+                    <img
+                      src={url}
+                      alt={type}
+                      loading="lazy"
+                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                      crossOrigin="anonymous"
+                      onError={(e) => {
+                        const target = e.currentTarget;
+                        target.style.display = 'none';
+                        const parent = target.parentElement;
+                        if (parent && !parent.querySelector('.img-fallback')) {
+                          const fallback = document.createElement('div');
+                          fallback.className = 'img-fallback absolute inset-0 flex flex-col items-center justify-center text-white/40 text-sm gap-2';
+                          fallback.innerHTML = `<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.5'><rect x='3' y='3' width='18' height='18' rx='2'/><circle cx='8.5' cy='8.5' r='1.5'/><path d='m21 15-5-5L5 21'/></svg><span class='capitalize'>${type.replace('_', ' ')}</span>`;
+                          parent.appendChild(fallback);
+                        }
+                      }}
+                    />
                   </div>
                 ))}
               </div>
