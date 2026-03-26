@@ -236,12 +236,18 @@ const AdminPanel = () => {
   const [safeLocations, setSafeLocations] = useState<SafeLocation[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'users' | 'hazards' | 'safe-locations'>('users');
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+
+  const showToast = (message: string, type: 'success' | 'error') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   useEffect(() => {
     const unsubscribeUsers = onSnapshot(
       query(collection(db, 'users'), orderBy('createdAt', 'desc')), 
       (snapshot) => {
-        setUsers(snapshot.docs.map(doc => doc.data() as UserProfile));
+        setUsers(snapshot.docs.map(doc => ({ ...doc.data(), uid: doc.id } as UserProfile)));
       },
       (error) => handleFirestoreError(error, OperationType.GET, 'users')
     );
@@ -273,7 +279,10 @@ const AdminPanel = () => {
   const updateUserRole = async (uid: string, newRole: 'user' | 'official' | 'admin') => {
     try {
       await setDoc(doc(db, 'users', uid), { role: newRole }, { merge: true });
+      showToast(`Role updated to "${newRole}" successfully.`, 'success');
     } catch (error) {
+      console.error('Role update error:', error);
+      showToast('Failed to update role. Check Firestore permissions.', 'error');
       handleFirestoreError(error, OperationType.UPDATE, `users/${uid}`);
     }
   };
@@ -400,6 +409,12 @@ const AdminPanel = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-12">
+      {/* Toast Notification */}
+      {toast && (
+        <div className={`fixed top-6 right-6 z-50 px-5 py-3 rounded-lg shadow-lg text-white text-sm font-medium transition-all ${toast.type === 'success' ? 'bg-green-600' : 'bg-red-600'}`}>
+          {toast.message}
+        </div>
+      )}
       <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-3xl font-bold tracking-tight text-white">Admin Console</h2>
@@ -1777,11 +1792,14 @@ export default function App() {
   // Force title and favicon regardless of what index.html says
   React.useEffect(() => {
     document.title = 'Samudrasetu';
-    const link = document.querySelector("link[rel~='icon']") as HTMLLinkElement || document.createElement('link');
+    let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
+    if (!link) {
+      link = document.createElement('link');
+      link.rel = 'icon';
+      document.head.appendChild(link);
+    }
     link.type = 'image/png';
-    link.rel = 'icon';
-    link.href = '/logo.png';
-    document.head.appendChild(link);
+    link.href = '/logo.png?v=1';
   }, []);
 
   return (
