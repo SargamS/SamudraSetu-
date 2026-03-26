@@ -399,7 +399,7 @@ const AdminPanel = () => {
   if (loading) return <div className="p-8 text-center text-slate-400">Loading admin panel...</div>;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-12">
+    <div className="max-w-7xl mx-auto px-4 py-12 text-slate-900">
       <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-3xl font-bold tracking-tight text-slate-900">Admin Console</h2>
@@ -945,7 +945,7 @@ const Dashboard = () => {
   const isOfficial = profile?.role === 'official' || profile?.role === 'admin';
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-slate-900">
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
         <div>
           <h2 className="text-3xl font-bold tracking-tight text-slate-900">Live Hazard Feed</h2>
