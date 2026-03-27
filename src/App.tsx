@@ -205,11 +205,70 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 
 // --- Components ---
 
-const ProtectedRoute: React.FC<{ children: React.ReactNode; requiredRole?: 'user' | 'official' | 'admin' }> = ({ children, requiredRole }) => {
-  const { user, profile, loading } = useAuth();
+const ProtectedRoute: React.FC<{ children: React.ReactNode; requiredRole?: 'user' | 'official' | 'admin'; pageName?: string; pageDescription?: string }> = ({ children, requiredRole, pageName, pageDescription }) => {
+  const { user, profile, loading, login } = useAuth();
 
   if (loading) return <div className="p-8 text-center text-white/70">Verifying access...</div>;
-  if (!user) return <Navigate to="/" />;
+  if (!user) return (
+    <div className="min-h-[80vh] flex items-center justify-center px-4">
+      <motion.div
+        initial={{ opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="max-w-md w-full text-center"
+      >
+        {/* Lock icon with animated ring */}
+        <div className="relative inline-flex items-center justify-center mb-6">
+          <div className="absolute w-24 h-24 rounded-full bg-blue-500/10 animate-ping" style={{ animationDuration: '2.5s' }} />
+          <div className="relative w-20 h-20 rounded-full bg-gradient-to-br from-blue-600/30 to-blue-800/30 border border-blue-500/30 flex items-center justify-center backdrop-blur-sm">
+            <LogIn className="w-9 h-9 text-blue-400" />
+          </div>
+        </div>
+
+        <h2 className="text-2xl font-bold text-white mb-2">
+          Login Required
+        </h2>
+        <p className="text-white/50 text-sm mb-1">
+          You need to be logged in to access
+        </p>
+        <p className="text-blue-400 font-semibold text-lg mb-3">
+          {pageName || 'this page'}
+        </p>
+        {pageDescription && (
+          <p className="text-white/40 text-sm mb-6">{pageDescription}</p>
+        )}
+
+        <div className="bg-white/5 border border-white/10 rounded-xl p-5 mb-6 text-left space-y-3">
+          <p className="text-white/60 text-xs uppercase tracking-wider font-medium">What you can do after logging in</p>
+          {pageName === 'Report Hazard' ? (
+            <>
+              <div className="flex items-center gap-3 text-white/70 text-sm"><AlertTriangle className="w-4 h-4 text-orange-400 shrink-0" /> Report maritime hazards in real-time</div>
+              <div className="flex items-center gap-3 text-white/70 text-sm"><MapPin className="w-4 h-4 text-blue-400 shrink-0" /> Pin exact hazard locations on the map</div>
+              <div className="flex items-center gap-3 text-white/70 text-sm"><CheckCircle2 className="w-4 h-4 text-green-400 shrink-0" /> Track the status of your submissions</div>
+            </>
+          ) : (
+            <>
+              <div className="flex items-center gap-3 text-white/70 text-sm"><MessageSquare className="w-4 h-4 text-purple-400 shrink-0" /> Post and read community messages</div>
+              <div className="flex items-center gap-3 text-white/70 text-sm"><Plus className="w-4 h-4 text-blue-400 shrink-0" /> Share updates and local sea conditions</div>
+              <div className="flex items-center gap-3 text-white/70 text-sm"><CheckCircle2 className="w-4 h-4 text-green-400 shrink-0" /> Connect with other mariners</div>
+            </>
+          )}
+        </div>
+
+        <button
+          onClick={login}
+          className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-150 shadow-lg shadow-blue-900/40"
+        >
+          <svg className="w-5 h-5" viewBox="0 0 24 24"><path fill="currentColor" d="M21.35 11.1h-9.17v2.73h6.51c-.33 3.81-3.5 5.44-6.5 5.44C8.36 19.27 5 16.25 5 12c0-4.1 3.2-7.27 7.2-7.27c3.09 0 4.9 1.97 4.9 1.97L19 4.72S16.56 2 12.1 2C6.42 2 2.03 6.8 2.03 12c0 5.05 4.13 10 10.22 10c5.35 0 9.25-3.67 9.25-9.09c0-1.15-.15-1.81-.15-1.81z"/></svg>
+          Continue with Google
+        </button>
+
+        <p className="mt-4 text-white/30 text-xs">
+          Your data is secure and only used within SamudraSetu
+        </p>
+      </motion.div>
+    </div>
+  );
 
   if (requiredRole) {
     const roles = ['user', 'official', 'admin'];
@@ -1824,7 +1883,7 @@ export default function App() {
                 <Route path="/" element={<Home />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/report" element={
-                  <ProtectedRoute>
+                  <ProtectedRoute pageName="Report Hazard" pageDescription="Help keep the seas safe by reporting maritime hazards, storms, and obstacles in real-time.">
                     <ReportHazard />
                   </ProtectedRoute>
                 } />
@@ -1832,7 +1891,7 @@ export default function App() {
                 <Route path="/media" element={<MediaGallery />} />
                 <Route path="/analytics" element={<Analytics />} />
                 <Route path="/community" element={
-                  <ProtectedRoute>
+                  <ProtectedRoute pageName="Community Board" pageDescription="Join the SamudraSetu community — share updates, sea conditions, and stay connected with fellow mariners.">
                     <Community />
                   </ProtectedRoute>
                 } />
