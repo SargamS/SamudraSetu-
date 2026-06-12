@@ -40,7 +40,6 @@ The platform enables operators and logistics teams to monitor vessels, manage ro
 <p align="center">
   <img src="assets/readme.png" width="700"/>
 </p>
-<div align="center">
 
 
 ## 🛠️ Tech Stack
