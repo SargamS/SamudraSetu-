@@ -1,8 +1,3 @@
-<p align="center">
-  <img src="assets/readme.png" width="700"/>
-</p>
-<div align="center">
-
 # 🌊 SamudraSetu
 
 ### AI-Powered Maritime Logistics & Sea-Bridge Tracking Platform
@@ -41,35 +36,12 @@ The platform enables operators and logistics teams to monitor vessels, manage ro
 | 📱 **Responsive Design** | Tailwind CSS v4 with full mobile and desktop support |
 | 🔒 **Secure Data Layer** | Custom Firestore security rules (`firestore.rules`) with role-based access patterns |
 
----
 
-## 🏗️ Architecture
+<p align="center">
+  <img src="assets/readme.png" width="700"/>
+</p>
+<div align="center">
 
-```
-┌──────────────────────────────────────────────────────────┐
-│                    React Frontend (Vite)                  │
-│                    TypeScript + Tailwind CSS              │
-│                                                          │
-│   ┌─────────────┐  ┌─────────────┐  ┌───────────────┐   │
-│   │  Map View   │  │  AI Chat    │  │  Logistics    │   │
-│   │  (Leaflet)  │  │  (Gemini)   │  │  Dashboard    │   │
-│   └─────────────┘  └─────────────┘  └───────────────┘   │
-└─────────────┬────────────────┬────────────────┬─────────┘
-              │                │                │
-    ┌─────────▼──────┐  ┌──────▼─────┐  ┌──────▼──────────┐
-    │   Firestore    │  │  Gemini AI  │  │  Geolocation    │
-    │  (Real-time    │  │  REST API   │  │  Browser API    │
-    │   Database)    │  │  @google/   │  │                 │
-    │   + Auth       │  │   genai     │  │                 │
-    └────────────────┘  └─────────────┘  └─────────────────┘
-              │
-    ┌─────────▼──────┐
-    │    Vercel      │
-    │  (Deployment)  │
-    └────────────────┘
-```
-
----
 
 ## 🛠️ Tech Stack
 
