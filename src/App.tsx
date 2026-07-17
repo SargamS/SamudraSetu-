@@ -27,8 +27,7 @@ import {
   Timestamp,
   serverTimestamp
 } from 'firebase/firestore';
-import { auth, db, storage } from './firebase';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { auth, db } from './firebase';
 import { UserProfile, Hazard, CommunityPost, SafeLocation } from './types';
 import { 
   Shield, 
@@ -850,7 +849,6 @@ const MediaGallery = () => {
   const [caption, setCaption] = useState('');
   const [incidentType, setIncidentType] = useState('storm');
   const [imageDataUrl, setImageDataUrl] = useState<string | null>(null);
-  const [imageFile, setImageFile] = useState<File | null>(null);
   const [activeTab, setActiveTab] = useState<'community' | 'calamities'>('community');
 
   useEffect(() => {
@@ -879,29 +877,66 @@ const MediaGallery = () => {
     return () => { unsubscribe(); u2(); };
   }, []);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Resize + JPEG-compress an image file in the browser so it's small
+  // enough to store directly as a base64 string inside a Firestore
+  // document (1MB per-document limit) — no Firebase Storage/billing needed.
+  const compressImage = (file: File, maxDimension = 1280, quality = 0.72): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const img = new Image();
+        img.onload = () => {
+          let { width, height } = img;
+          if (width > maxDimension || height > maxDimension) {
+            if (width > height) {
+              height = Math.round((height * maxDimension) / width);
+              width = maxDimension;
+            } else {
+              width = Math.round((width * maxDimension) / height);
+              height = maxDimension;
+            }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) { reject(new Error('Canvas not supported')); return; }
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.onerror = () => reject(new Error('Could not read image'));
+        img.src = reader.result as string;
+      };
+      reader.onerror = () => reject(new Error('Could not read file'));
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setImageFile(file);
-    const reader = new FileReader();
-    reader.onload = () => setImageDataUrl(reader.result as string);
-    reader.readAsDataURL(file);
+    try {
+      const compressed = await compressImage(file);
+      setImageDataUrl(compressed);
+    } catch (err) {
+      console.error(err);
+      alert('Could not process that image. Please try a different file.');
+    }
   };
 
   const handleUpload = async () => {
-    if (!user || !imageFile) return;
+    if (!user || !imageDataUrl) return;
     setUploading(true);
     try {
-      // Upload the actual file bytes to Firebase Storage instead of
-      // stuffing a base64 data URL into Firestore (which has a 1MB
-      // per-document limit and will reject most real photos).
-      const path = `mediaPosts/${user.uid}/${Date.now()}_${imageFile.name}`;
-      const storageRef = ref(storage, path);
-      await uploadBytes(storageRef, imageFile);
-      const downloadUrl = await getDownloadURL(storageRef);
-
+      // Safety guard: Firestore documents cap out at 1MB total. The
+      // compression above should comfortably fit under that, but bail
+      // out with a clear message instead of a mysterious failure if not.
+      if (imageDataUrl.length > 900_000) {
+        alert('That photo is still too large even after compression. Please try a smaller or simpler image.');
+        return;
+      }
       await addDoc(collection(db, 'mediaPosts'), {
-        imageUrl: downloadUrl,
+        imageUrl: imageDataUrl,
         caption,
         type: incidentType,
         authorName: profile?.displayName || 'Anonymous',
@@ -911,7 +946,6 @@ const MediaGallery = () => {
       });
       setCaption('');
       setImageDataUrl(null);
-      setImageFile(null);
       setShowUpload(false);
     } catch (err) {
       console.error(err);
