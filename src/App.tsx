@@ -27,7 +27,8 @@ import {
   Timestamp,
   serverTimestamp
 } from 'firebase/firestore';
-import { auth, db } from './firebase';
+import { auth, db, storage } from './firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { UserProfile, Hazard, CommunityPost, SafeLocation } from './types';
 import { 
   Shield, 
@@ -849,6 +850,7 @@ const MediaGallery = () => {
   const [caption, setCaption] = useState('');
   const [incidentType, setIncidentType] = useState('storm');
   const [imageDataUrl, setImageDataUrl] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [activeTab, setActiveTab] = useState<'community' | 'calamities'>('community');
 
   useEffect(() => {
@@ -880,17 +882,26 @@ const MediaGallery = () => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    setImageFile(file);
     const reader = new FileReader();
     reader.onload = () => setImageDataUrl(reader.result as string);
     reader.readAsDataURL(file);
   };
 
   const handleUpload = async () => {
-    if (!user || !imageDataUrl) return;
+    if (!user || !imageFile) return;
     setUploading(true);
     try {
+      // Upload the actual file bytes to Firebase Storage instead of
+      // stuffing a base64 data URL into Firestore (which has a 1MB
+      // per-document limit and will reject most real photos).
+      const path = `mediaPosts/${user.uid}/${Date.now()}_${imageFile.name}`;
+      const storageRef = ref(storage, path);
+      await uploadBytes(storageRef, imageFile);
+      const downloadUrl = await getDownloadURL(storageRef);
+
       await addDoc(collection(db, 'mediaPosts'), {
-        imageUrl: imageDataUrl,
+        imageUrl: downloadUrl,
         caption,
         type: incidentType,
         authorName: profile?.displayName || 'Anonymous',
@@ -900,6 +911,7 @@ const MediaGallery = () => {
       });
       setCaption('');
       setImageDataUrl(null);
+      setImageFile(null);
       setShowUpload(false);
     } catch (err) {
       console.error(err);
