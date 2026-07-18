@@ -54,8 +54,8 @@ service cloud.firestore {
         (request.resource.data.role == 'user' || isAdmin()) &&
         isValidEmail(request.resource.data.email);
 
-      allow update: if isOwner(userId) &&
-        (request.resource.data.role == resource.data.role || isAdmin());
+      allow update: if isAdmin() ||
+        (isOwner(userId) && request.resource.data.role == resource.data.role);
 
       allow delete: if isAdmin();
     }
